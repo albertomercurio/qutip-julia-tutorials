@@ -4,6 +4,7 @@ author: Li-Xun Cai
 date: 2025-03-11  # last update (keep this comment as a reminder)
 
 engine: julia
+code-links: binder
 ---
 
 Inspirations taken from [this QuTiP tutorial](https://nbviewer.org/urls/qutip.org/qutip-tutorials/tutorials-v5/lectures/Lecture-3A-Dicke-model.ipynb) by J. R. Johansson.
