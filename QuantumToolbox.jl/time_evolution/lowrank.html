@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Luca Gravina">
+<meta name="dcterms.date" content="2025-05-17">
+
+<title>Low rank master equation – Tutorials for Quantum Toolbox in Julia</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../assets/favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-f428fda71a3abb5b1b9c21151da8fd61.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-6ec1ea2183979a90750e7180bf9040de.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-f428fda71a3abb5b1b9c21151da8fd61.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d677a5ca654c04e56808c87eda8d06b9.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-c8732745a6d2a2b18a44d9e233549f9e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-d677a5ca654c04e56808c87eda8d06b9.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/logo.png" alt="QuantumToolbox logo." class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Tutorials for Quantum Toolbox in Julia</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../QuantumToolbox.jl/toc.html"> 
+<span class="menu-text">QuantumToolbox.jl</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../HierarchicalEOM.jl/toc.html"> 
+<span class="menu-text">HierarchicalEOM.jl</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+    <a href="https://github.com/qutip/qutip-julia-tutorials" title="" class="quarto-navigation-tool px-1" aria-label=""><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#low-rank-master-equations" id="toc-low-rank-master-equations" class="nav-link" data-scroll-target="#low-rank-master-equations">Low-rank master equations</a></li>
+  </ul></li>
+  <li><a href="#low-rank-dynamics-of-the-transverse-field-heisenberg-model" id="toc-low-rank-dynamics-of-the-transverse-field-heisenberg-model" class="nav-link" data-scroll-target="#low-rank-dynamics-of-the-transverse-field-heisenberg-model">Low-rank dynamics of the transverse field Heisenberg model</a>
+  <ul class="collapse">
+  <li><a href="#constructing-the-low-rank-basis" id="toc-constructing-the-low-rank-basis" class="nav-link" data-scroll-target="#constructing-the-low-rank-basis">Constructing the low-rank basis</a></li>
+  <li><a href="#full-evolution" id="toc-full-evolution" class="nav-link" data-scroll-target="#full-evolution">Full evolution</a></li>
+  <li><a href="#low-rank-evolution" id="toc-low-rank-evolution" class="nav-link" data-scroll-target="#low-rank-evolution">Low Rank evolution</a></li>
+  </ul></li>
+  <li><a href="#version-information" id="toc-version-information" class="nav-link" data-scroll-target="#version-information">Version Information</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/qutip/qutip-julia-tutorials/edit/main/QuantumToolbox.jl/time_evolution/lowrank.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/qutip/qutip-julia-tutorials/blob/main/QuantumToolbox.jl/time_evolution/lowrank.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/qutip/qutip-julia-tutorials/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Low rank master equation</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Luca Gravina </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Last Update</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2025-05-17</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>In this tutorial we will demonstrate how to solve the master equation without the quadratic overhead associated with the full manipulation of the density matrix. For a detailed explanation of the method, we recommend to read the Ref. <span class="citation" data-cites="gravina2024adaptive">(<a href="#ref-gravina2024adaptive" role="doc-biblioref">Gravina and Savona 2024</a>)</span>.</p>
+<p>The proposed approach is based on the realization that many quantum systems, particularly those with low entropy, can be effectively represented by a density matrix of significantly lower rank than what the whole Hilbert space would require. This reduction is achieved by focusing on a subset of states that capture the essential structure of the statistical ensemble characterizing the mixed quantum state, thereby reducing computational complexity while maintaining the exactness of the method.</p>
+<section id="low-rank-master-equations" class="level3">
+<h3 class="anchored" data-anchor-id="low-rank-master-equations">Low-rank master equations</h3>
+<p>We consider a decomposition of the density matrix of the form <span class="math display">\[
+    \hat\rho(t) = \sum_{i,j=1}^{M(t)} B_{i,j}(t) | \varphi_i(t) \rangle \langle \varphi_j(t) |.
+\]</span> The states <span class="math inline">\(\{|\varphi_k(t)\rangle\,;\,k=1,\ldots,M(t)\}\)</span> spanning the low-rank manifold, can in turn be decomposed as <span class="math display">\[
+    |\varphi_k(t)\rangle = \sum_{\alpha=1}^{N} z_{\alpha,k}(t) |e_\alpha\rangle,
+\]</span> where <span class="math inline">\(\{|e_\alpha\rangle\,;\,\alpha=1,\ldots,N\}\)</span> is a fixed basis of the Hilbert space, and <span class="math inline">\(z_{\alpha,k}(t)\)</span> are the time-dependent coefficients.</p>
+<p>The coefficients <span class="math inline">\(B_{i,j}(t)\)</span> are collected in the matrix <span class="math inline">\(B(t)\)</span>, and the coefficients <span class="math inline">\(z_{\alpha,k}(t)\)</span> are collected in the matrix <span class="math inline">\(z(t)\)</span>.</p>
+<p>In <span class="citation" data-cites="gravina2024adaptive">(<a href="#ref-gravina2024adaptive" role="doc-biblioref">Gravina and Savona 2024</a>)</span> all coefficients <span class="math inline">\(B_{i,j}(t)\)</span> and <span class="math inline">\(z_{\alpha,k}(t)\)</span> are taken to be variational parameters. The evolution equation for the density matrix is consequently mapped onto a set of differential equations for such parameters via the time-dependent variational principle (TDVP).</p>
+<p>The TDVP ensures a dynamical adjustment of the variational states, guaranteeing the optimal set of states is selected at all times to best approximate the dissipative evolution. This allows for a significant reduction in computational complexity as the number of states <span class="math inline">\(M(t)\)</span> necessary to accurately capture the dynamics of the system is as small as can be, hopefully much smaller than the full Hilbert space dimension <span class="math inline">\(N\)</span>.</p>
+</section>
+</section>
+<section id="low-rank-dynamics-of-the-transverse-field-heisenberg-model" class="level2">
+<h2 class="anchored" data-anchor-id="low-rank-dynamics-of-the-transverse-field-heisenberg-model">Low-rank dynamics of the transverse field Heisenberg model</h2>
+<p>In this example we consider the dynamics of the transverse field Ising model (TFIM) on a 2x3 lattice. We start by importing the packages</p>
+<div id="2" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1"></a><span class="im">using</span> <span class="bu">QuantumToolbox</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="im">using</span> <span class="bu">LinearAlgebra</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="im">using</span> <span class="bu">CairoMakie</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We define the lattice with dimensions <code>Nx = 2</code> and <code>Ny = 3</code> and use the <code>Lattice</code> class to generate the lattice.</p>
+<div id="4" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href="#cb2-1"></a>Nx, Ny <span class="op">=</span> <span class="fl">2</span>, <span class="fl">3</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>latt <span class="op">=</span> <span class="fu">Lattice</span>(Nx <span class="op">=</span> Nx, Ny <span class="op">=</span> Ny)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>Lattice{Int64, LinearIndices{2, Tuple{Base.OneTo{Int64}, Base.OneTo{Int64}}}, CartesianIndices{2, Tuple{Base.OneTo{Int64}, Base.OneTo{Int64}}}}(2, 3, 6, [1 3 5; 2 4 6], CartesianIndices((2, 3)))</code></pre>
+</div>
+</div>
+<p>The Hamiltonian of the TFIM reads <span class="math display">\[
+H = J_x \sum_{\langle i,j \rangle} \sigma_i^x \sigma_j^x + J_y \sum_{\langle i,j \rangle} \sigma_i^y \sigma_j^y + J_z \sum_{\langle i,j \rangle} \sigma_i^z \sigma_j^z + h_x \sum_i \sigma_i^x,
+\]</span> where $ _i^{x,y,z} $ are the Pauli matrices acting on site $ i $ and $ i,j $ denotes nearest neighbors. The collapse operators are given by <span class="math display">\[
+c_i = \sqrt{\gamma} \sigma_i^-,
+\]</span> where $ _i^- $ is the lowering operator acting on site $ i$. The many-body operators are constructed using</p>
+<div id="6" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1"></a>Jx <span class="op">=</span> <span class="fl">0.9</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>Jy <span class="op">=</span> <span class="fl">1.04</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a>Jz <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>hx <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>γ <span class="op">=</span> <span class="fl">1</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a></span>
+<span id="cb4-7"><a href="#cb4-7"></a>Sx <span class="op">=</span> <span class="fu">mapreduce</span>(<span class="fu">i-&gt;multisite_operator</span>(latt, i <span class="op">=&gt;</span> <span class="fu">sigmax</span>()), <span class="op">+</span>, <span class="fl">1</span><span class="op">:</span>latt.N)</span>
+<span id="cb4-8"><a href="#cb4-8"></a>Sy <span class="op">=</span> <span class="fu">mapreduce</span>(<span class="fu">i-&gt;multisite_operator</span>(latt, i <span class="op">=&gt;</span> <span class="fu">sigmay</span>()), <span class="op">+</span>, <span class="fl">1</span><span class="op">:</span>latt.N)</span>
+<span id="cb4-9"><a href="#cb4-9"></a>Sz <span class="op">=</span> <span class="fu">mapreduce</span>(<span class="fu">i-&gt;multisite_operator</span>(latt, i <span class="op">=&gt;</span> <span class="fu">sigmaz</span>()), <span class="op">+</span>, <span class="fl">1</span><span class="op">:</span>latt.N)</span>
+<span id="cb4-10"><a href="#cb4-10"></a></span>
+<span id="cb4-11"><a href="#cb4-11"></a>SFxx <span class="op">=</span> <span class="fu">sum</span>([<span class="fu">multisite_operator</span>(latt, i <span class="op">=&gt;</span> <span class="fu">sigmax</span>()) <span class="op">*</span> <span class="fu">multisite_operator</span>(latt, j <span class="op">=&gt;</span> <span class="fu">sigmax</span>()) for i <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>latt.N for j <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>latt.N])</span>
+<span id="cb4-12"><a href="#cb4-12"></a></span>
+<span id="cb4-13"><a href="#cb4-13"></a>H, c_ops <span class="op">=</span> <span class="fu">DissipativeIsing</span>(Jx, Jy, Jz, hx, <span class="fl">0</span>., <span class="fl">0</span>., γ, latt; boundary_condition<span class="op">=:</span>periodic_bc, order<span class="op">=</span><span class="fl">1</span>)</span>
+<span id="cb4-14"><a href="#cb4-14"></a>e_ops <span class="op">=</span> (Sx, Sy, Sz, SFxx)</span>
+<span id="cb4-15"><a href="#cb4-15"></a></span>
+<span id="cb4-16"><a href="#cb4-16"></a>tl <span class="op">=</span> <span class="fu">LinRange</span>(<span class="fl">0</span>, <span class="fl">10</span>, <span class="fl">100</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="constructing-the-low-rank-basis" class="level3">
+<h3 class="anchored" data-anchor-id="constructing-the-low-rank-basis">Constructing the low-rank basis</h3>
+<p>We proceed by constructing the low-rank basis. <code>N_cut</code> is the dimension of the Hilbert space of each mode, and <code>N_modes</code> is the number of modes (or spins). We consider an initial low-rank basis with <code>M = Nx * Ny + 1</code> states.</p>
+<p>We first define the lr-space dimensions</p>
+<div id="8" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1"></a>N_cut <span class="op">=</span> <span class="fl">2</span> <span class="co"># Number of states of each mode</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>N_modes <span class="op">=</span> latt.N  <span class="co"># Number of modes</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a>N <span class="op">=</span> N_cut<span class="op">^</span>N_modes <span class="co"># Total number of states</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a></span>
+<span id="cb5-5"><a href="#cb5-5"></a>M <span class="op">=</span> latt.N <span class="op">+</span> <span class="fl">1</span>; <span class="co"># Number of states in the LR basis</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Since we will take as initial state for our dynamics the pure state with all spins pointing up, the initial low-rank basis must include at least this state.</p>
+<div id="10" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1"></a>ϕ <span class="op">=</span> <span class="fu">Vector</span><span class="dt">{QuantumObject{Ket,Dimensions{M - 1,NTuple{M - 1,Space}},Vector{ComplexF64}}}</span>(<span class="cn">undef</span>, M)</span>
+<span id="cb6-2"><a href="#cb6-2"></a>ϕ[<span class="fl">1</span>] <span class="op">=</span> <span class="fu">kron</span>(<span class="fu">fill</span>(<span class="fu">basis</span>(<span class="fl">2</span>, <span class="fl">1</span>), N_modes)<span class="op">...</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>
+Quantum Object:   type=Ket()   dims=[2, 2, 2, 2, 2, 2]   size=(64,)
+64-element Vector{ComplexF64}:
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+     ⋮
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 0.0 + 0.0im
+ 1.0 + 0.0im</code></pre>
+</div>
+</div>
+<p>The remaining <code>M-1</code> states are taken as those with minimal Hamming distance from the latter state, that is those we obtain by flipping the spin of a single site with respect to the completely polarized state.</p>
+<div id="12" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1"></a>i <span class="op">=</span> <span class="fl">1</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>N_modes</span>
+<span id="cb8-3"><a href="#cb8-3"></a>    <span class="kw">global</span> i <span class="op">+=</span> <span class="fl">1</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a>    i <span class="op">&lt;=</span> M <span class="op">&amp;&amp;</span> (ϕ[i] <span class="op">=</span> <span class="fu">multisite_operator</span>(latt, j<span class="op">=&gt;</span><span class="fu">sigmap</span>()) <span class="op">*</span> ϕ[<span class="fl">1</span>])</span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="cf">end</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="cf">for</span> k <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>N_modes<span class="op">-</span><span class="fl">1</span></span>
+<span id="cb8-8"><a href="#cb8-8"></a>    <span class="cf">for</span> l <span class="kw">in</span> k<span class="op">+</span><span class="fl">1</span><span class="op">:</span>N_modes</span>
+<span id="cb8-9"><a href="#cb8-9"></a>        <span class="kw">global</span> i <span class="op">+=</span> <span class="fl">1</span></span>
+<span id="cb8-10"><a href="#cb8-10"></a>        i <span class="op">&lt;=</span> M <span class="op">&amp;&amp;</span> (ϕ[i] <span class="op">=</span> <span class="fu">multisite_operator</span>(latt, k<span class="op">=&gt;</span><span class="fu">sigmap</span>(), l<span class="op">=&gt;</span><span class="fu">sigmap</span>()) <span class="op">*</span> ϕ[<span class="fl">1</span>])</span>
+<span id="cb8-11"><a href="#cb8-11"></a>    <span class="cf">end</span></span>
+<span id="cb8-12"><a href="#cb8-12"></a><span class="cf">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>At this point the vector of states <code>ϕ</code> contains the full representation of our low-rank states. These coefficients comprise matrix <code>z</code>.</p>
+<p>The matrix <code>B</code>, on the other hand, contains the populations and coherences with which each of the low-rank states contributes to the density matrix. We initialize it so that only the first state is populated, and all other states are unpopulated.</p>
+<p>We also compute the full density matrix <code>ρ</code> from the low-rank representation. Of course this defeats the purpose of the low-rank representation. We use it here for illustrative purposes to show that the low-rank predictions match the exact dynamics.</p>
+<div id="14" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1"></a>z <span class="op">=</span> <span class="fu">hcat</span>(<span class="fu">get_data</span>.(ϕ)<span class="op">...</span>)</span>
+<span id="cb9-2"><a href="#cb9-2"></a>B <span class="op">=</span> <span class="fu">Matrix</span>(<span class="fu">Diagonal</span>([<span class="fl">1</span> <span class="op">+</span> <span class="fl">0im</span>; <span class="fu">zeros</span>(M <span class="op">-</span> <span class="fl">1</span>)]))</span>
+<span id="cb9-3"><a href="#cb9-3"></a>S <span class="op">=</span> z<span class="op">'</span> <span class="op">*</span> z <span class="co"># Overlap matrix</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a>B <span class="op">=</span> B <span class="op">/</span> <span class="fu">tr</span>(S <span class="op">*</span> B) <span class="co"># Normalize B</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a></span>
+<span id="cb9-6"><a href="#cb9-6"></a>ρ <span class="op">=</span> <span class="fu">QuantumObject</span>(z <span class="op">*</span> B <span class="op">*</span> z<span class="op">'</span>, dims <span class="op">=</span> <span class="fu">ntuple</span>(i<span class="op">-&gt;</span>N_cut, <span class="fu">Val</span>(N_modes))); <span class="co"># Full density matrix</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="full-evolution" class="level3">
+<h3 class="anchored" data-anchor-id="full-evolution">Full evolution</h3>
+<p>We now compare the results of the low-rank evolution with the full evolution. We first evolve the system using the <code>mesolve</code> function</p>
+<div id="16" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1"></a>sol_me <span class="op">=</span> <span class="fu">mesolve</span>(H, ρ, tl, c_ops; e_ops <span class="op">=</span> [e_ops<span class="op">...</span>])</span>
+<span id="cb10-2"><a href="#cb10-2"></a>Strue <span class="op">=</span> <span class="fu">entropy_vn</span>(sol_me.states[<span class="kw">end</span>], base<span class="op">=</span><span class="fl">2</span>) <span class="op">/</span> latt.N;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Progress: [==============================] 100.0% --- Elapsed Time: 0h 00m 00s (ETA: 0h 00m 00s)</code></pre>
+</div>
+</div>
+</section>
+<section id="low-rank-evolution" class="level3">
+<h3 class="anchored" data-anchor-id="low-rank-evolution">Low Rank evolution</h3>
+<p>The <code>lr_mesolve</code> function allows to conveniently keep track of non-linear functionals of the density matrix during the evolution without ever computing the full density matrix and without the need to store <code>z</code> and <code>B</code> at each time step. To do so we define the functionals of the density matrix that we want to keep track of and that will be evaluated at each time step.</p>
+<p>We compute the purity <span class="math display">\[
+P = \mathrm{Tr}(\rho^2),
+\]</span> the von Neumann entropy <span class="math display">\[
+S = -\mathrm{Tr}(\rho \log_2(\rho)),
+\]</span> and the trace <span class="math display">\[
+\mathrm{Tr}(\rho).
+\]</span></p>
+<p>To maximize efficiency and minimize memory allocations we make use of preallocated variables stores in the <code>parameters</code> constructor of the solver.</p>
+<div id="18" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">function</span> <span class="fu">f_purity</span>(p, z, B)</span>
+<span id="cb12-2"><a href="#cb12-2"></a>    N <span class="op">=</span> p.N</span>
+<span id="cb12-3"><a href="#cb12-3"></a>    M <span class="op">=</span> p.M</span>
+<span id="cb12-4"><a href="#cb12-4"></a>    S <span class="op">=</span> p.S</span>
+<span id="cb12-5"><a href="#cb12-5"></a>    T <span class="op">=</span> p.temp_MM</span>
+<span id="cb12-6"><a href="#cb12-6"></a></span>
+<span id="cb12-7"><a href="#cb12-7"></a>    <span class="fu">mul!</span>(T, S, B)</span>
+<span id="cb12-8"><a href="#cb12-8"></a>    <span class="cf">return</span> <span class="fu">tr</span>(T<span class="op">^</span><span class="fl">2</span>)</span>
+<span id="cb12-9"><a href="#cb12-9"></a><span class="kw">end</span></span>
+<span id="cb12-10"><a href="#cb12-10"></a></span>
+<span id="cb12-11"><a href="#cb12-11"></a><span class="kw">function</span> <span class="fu">f_trace</span>(p, z, B)</span>
+<span id="cb12-12"><a href="#cb12-12"></a>    N <span class="op">=</span> p.N</span>
+<span id="cb12-13"><a href="#cb12-13"></a>    M <span class="op">=</span> p.M</span>
+<span id="cb12-14"><a href="#cb12-14"></a>    S <span class="op">=</span> p.S</span>
+<span id="cb12-15"><a href="#cb12-15"></a>    T <span class="op">=</span> p.temp_MM</span>
+<span id="cb12-16"><a href="#cb12-16"></a></span>
+<span id="cb12-17"><a href="#cb12-17"></a>    <span class="fu">mul!</span>(T, S, B)</span>
+<span id="cb12-18"><a href="#cb12-18"></a>    <span class="cf">return</span> <span class="fu">tr</span>(T)</span>
+<span id="cb12-19"><a href="#cb12-19"></a><span class="kw">end</span></span>
+<span id="cb12-20"><a href="#cb12-20"></a></span>
+<span id="cb12-21"><a href="#cb12-21"></a><span class="kw">function</span> <span class="fu">f_entropy</span>(p, z, B)</span>
+<span id="cb12-22"><a href="#cb12-22"></a>    C <span class="op">=</span> p.A0</span>
+<span id="cb12-23"><a href="#cb12-23"></a>    σ <span class="op">=</span> p.Bi</span>
+<span id="cb12-24"><a href="#cb12-24"></a></span>
+<span id="cb12-25"><a href="#cb12-25"></a>    <span class="fu">mul!</span>(C, z, <span class="fu">sqrt</span>(B))</span>
+<span id="cb12-26"><a href="#cb12-26"></a>    <span class="fu">mul!</span>(σ, C<span class="op">'</span>, C)</span>
+<span id="cb12-27"><a href="#cb12-27"></a>    <span class="cf">return</span> <span class="fu">entropy_vn</span>(<span class="fu">Qobj</span>(<span class="fu">Hermitian</span>(σ), <span class="kw">type</span><span class="op">=</span><span class="fu">Operator</span>()), base<span class="op">=</span><span class="fl">2</span>)</span>
+<span id="cb12-28"><a href="#cb12-28"></a><span class="kw">end</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A critical aspect of the LR truncation is the possibility to dynamically adjust the dimension of the basis throughout the system’s evolution <span class="math inline">\(M=M(t)\)</span>. This adaptability is essential for accommodating changes in the system’s entropy over time.</p>
+<p>To adapt the dimension of the low-rank basis, we look at a control parameter <span class="math inline">\(\chi\)</span> that is positively correlated with the entropy of the system and provides a measure of the quality of the low-rank approximation. When <span class="math inline">\(\chi\)</span> exceeds a certain threshold, the dimension of the low-rank basis is increased by one.</p>
+<p>The options below specify how the dimension of the low-rank basis is adjusted during the evolution.</p>
+<div id="20" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1"></a>opt <span class="op">=</span> (err_max <span class="op">=</span> <span class="fl">1e-3</span>, p0 <span class="op">=</span> <span class="fl">0.0</span>, atol_inv <span class="op">=</span> <span class="fl">1e-6</span>, adj_condition <span class="op">=</span> <span class="st">"variational"</span>, Δt <span class="op">=</span> <span class="fl">0.0</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>err_max</code> is the maximum error allowed in the time evolution of the density matrix.</p>
+<p><code>p0</code> is the initial population with which the new state is added to the basis after crossing the threshold.</p>
+<p><code>adj_condition = "variational"</code> selects one of three possible definitions for the control quantity <code>chi</code>. Specifically, the selected option consists in the leakage from the variational manifold and is defined as <span class="math display">\[
+\chi = \operatorname{Tr}(S^{-1} L).
+\]</span></p>
+<p>Finally, <code>Δt</code> specifies the checkpointing interval by which the simulation is rewinded upon the basis expansion.</p>
+<p>Not directly related to the basis expansion, but still important for the stability of the algorithm, are the options <code>atol_inv</code> (the tolerance for the inverse of the overlap matrix) and <code>alg</code> (the ODE solver).</p>
+<p>We now launch the evolution using the <code>lr_mesolve</code> function</p>
+<div id="22" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb14-1"><a href="#cb14-1"></a>sol_lr <span class="op">=</span> <span class="fu">lr_mesolve</span>(H, z, B, tl, c_ops; e_ops <span class="op">=</span> e_ops, f_ops <span class="op">=</span> (f_purity, f_entropy, f_trace), opt <span class="op">=</span> opt);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Progress: 2%Progress: 3%Progress: 4%Progress: 5%Progress: 6%Progress: 7%Progress: 8%Progress: 9%Progress: 10%Progress: 11%Progress: 12%Progress: 13%Progress: 14%Progress: 15%Progress: 16%Progress: 17%Progress: 18%Progress: 19%Progress: 20%Progress: 21%Progress: 22%Progress: 23%Progress: 24%Progress: 25%Progress: 26%Progress: 27%Progress: 28%Progress: 29%Progress: 30%Progress: 31%Progress: 32%Progress: 33%Progress: 34%Progress: 35%Progress: 36%Progress: 37%Progress: 38%Progress: 39%Progress: 40%Progress: 41%Progress: 42%Progress: 43%Progress: 44%Progress: 45%Progress: 46%Progress: 47%Progress: 48%Progress: 49%Progress: 50%Progress: 51%Progress: 52%Progress: 53%Progress: 54%Progress: 55%Progress: 56%Progress: 57%Progress: 58%Progress: 59%Progress: 60%Progress: 61%Progress: 62%Progress: 63%Progress: 64%Progress: 65%Progress: 66%Progress: 67%Progress: 68%Progress: 69%Progress: 70%Progress: 71%Progress: 72%Progress: 73%Progress: 74%Progress: 75%Progress: 76%Progress: 77%Progress: 78%Progress: 79%Progress: 80%Progress: 81%Progress: 82%Progress: 83%Progress: 84%Progress: 85%Progress: 86%Progress: 87%Progress: 88%Progress: 89%Progress: 90%Progress: 91%Progress: 92%Progress: 93%Progress: 94%Progress: 95%Progress: 96%Progress: 97%Progress: 98%Progress: 99%Progress: 100%</code></pre>
+</div>
+</div>
+<p>We can now compare the results of the low-rank evolution with the full evolution.</p>
+<div id="24" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1"></a>m_me <span class="op">=</span> <span class="fu">real</span>(sol_me.expect[<span class="fl">3</span>, <span class="op">:</span>]) <span class="op">/</span> Nx <span class="op">/</span> Ny</span>
+<span id="cb16-2"><a href="#cb16-2"></a>m_lr <span class="op">=</span> <span class="fu">real</span>(sol_lr.expect[<span class="fl">3</span>, <span class="op">:</span>]) <span class="op">/</span> Nx <span class="op">/</span> Ny</span>
+<span id="cb16-3"><a href="#cb16-3"></a></span>
+<span id="cb16-4"><a href="#cb16-4"></a>fig <span class="op">=</span> <span class="fu">Figure</span>(size <span class="op">=</span> (<span class="fl">500</span>, <span class="fl">350</span>), fontsize <span class="op">=</span> <span class="fl">15</span>)</span>
+<span id="cb16-5"><a href="#cb16-5"></a>ax <span class="op">=</span> <span class="fu">Axis</span>(fig[<span class="fl">1</span>, <span class="fl">1</span>], xlabel <span class="op">=</span> L<span class="st">"\gamma t"</span>, ylabel <span class="op">=</span> L<span class="st">"M_{z}"</span>, xlabelsize <span class="op">=</span> <span class="fl">20</span>, ylabelsize <span class="op">=</span> <span class="fl">20</span>)</span>
+<span id="cb16-6"><a href="#cb16-6"></a><span class="fu">lines!</span>(ax, tl, m_lr, label <span class="op">=</span> L<span class="st">"LR </span><span class="sc">$</span><span class="st">[</span>M<span class="st">=M(t)]</span><span class="sc">$</span><span class="st">", </span>linewidth<span class="st"> = 2)</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="fu">lines!</span>(ax, tl, m_me, label <span class="op">=</span> <span class="st">"Fock"</span>, linewidth <span class="op">=</span> <span class="fl">2</span>, linestyle <span class="op">=</span> <span class="op">:</span>dash)</span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="fu">axislegend</span>(ax, position <span class="op">=</span> <span class="op">:</span>rb)</span>
+<span id="cb16-9"><a href="#cb16-9"></a></span>
+<span id="cb16-10"><a href="#cb16-10"></a>ax2 <span class="op">=</span> <span class="fu">Axis</span>(fig[<span class="fl">1</span>, <span class="fl">2</span>], xlabel <span class="op">=</span> L<span class="st">"\gamma t"</span>, ylabel <span class="op">=</span> <span class="st">"Value"</span>, xlabelsize <span class="op">=</span> <span class="fl">20</span>, ylabelsize <span class="op">=</span> <span class="fl">20</span>)</span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="fu">lines!</span>(ax2, tl, <span class="fl">1</span> <span class="op">.-</span> <span class="fu">real</span>(sol_lr.fexpect[<span class="fl">1</span>, <span class="op">:</span>]), label <span class="op">=</span> L<span class="st">"</span><span class="sc">$</span><span class="st">1-</span>P<span class="sc">$</span><span class="st">", </span>linewidth<span class="st"> = 2)</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="fu">lines!</span>(</span>
+<span id="cb16-13"><a href="#cb16-13"></a>    ax2,</span>
+<span id="cb16-14"><a href="#cb16-14"></a>    tl,</span>
+<span id="cb16-15"><a href="#cb16-15"></a>    <span class="fl">1</span> <span class="op">.-</span> <span class="fu">real</span>(sol_lr.fexpect[<span class="fl">3</span>, <span class="op">:</span>]),</span>
+<span id="cb16-16"><a href="#cb16-16"></a>    label <span class="op">=</span> L<span class="st">"</span><span class="sc">$</span><span class="st">1-\</span>mathrm<span class="st">{Tr}(</span><span class="sc">\r</span><span class="st">ho)</span><span class="sc">$</span><span class="st">",</span></span>
+<span id="cb16-17"><a href="#cb16-17"></a><span class="st">    </span>linewidth<span class="st"> = 2,</span></span>
+<span id="cb16-18"><a href="#cb16-18"></a>    linestyle <span class="op">=</span> <span class="op">:</span>dash,</span>
+<span id="cb16-19"><a href="#cb16-19"></a>    color <span class="op">=</span> <span class="op">:</span>orange,</span>
+<span id="cb16-20"><a href="#cb16-20"></a>)</span>
+<span id="cb16-21"><a href="#cb16-21"></a><span class="fu">lines!</span>(ax2, tl, <span class="fu">real</span>(sol_lr.fexpect[<span class="fl">2</span>, <span class="op">:</span>]) <span class="op">/</span> Nx <span class="op">/</span> Ny, color <span class="op">=</span> <span class="op">:</span>blue, label <span class="op">=</span> L<span class="st">"S"</span>, linewidth <span class="op">=</span> <span class="fl">2</span>)</span>
+<span id="cb16-22"><a href="#cb16-22"></a><span class="fu">hlines!</span>(ax2, [Strue], color <span class="op">=</span> <span class="op">:</span>blue, linestyle <span class="op">=</span> <span class="op">:</span>dash, linewidth <span class="op">=</span> <span class="fl">2</span>, label <span class="op">=</span> L<span class="st">"S^{\,\mathrm{true}}_{\mathrm{ss}}"</span>)</span>
+<span id="cb16-23"><a href="#cb16-23"></a><span class="fu">axislegend</span>(ax2, position <span class="op">=</span> <span class="op">:</span>rb)</span>
+<span id="cb16-24"><a href="#cb16-24"></a></span>
+<span id="cb16-25"><a href="#cb16-25"></a>fig</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<img width="500" height="350" style="object-fit: contain; height: auto;" src="data:image/png;base64, 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">
+</div>
+</div>
+</section>
+</section>
+<section id="version-information" class="level2">
+<h2 class="anchored" data-anchor-id="version-information">Version Information</h2>
+<div id="26" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1"></a>QuantumToolbox.<span class="fu">versioninfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ QuantumToolbox.jl: Quantum Toolbox in Julia
+≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+Copyright © QuTiP team 2022 and later.
+Current admin team:
+    Alberto Mercurio and Yi-Te Huang
+
+Package information:
+====================================
+Julia              Ver. 1.11.5
+QuantumToolbox     Ver. 0.31.1
+SciMLOperators     Ver. 0.3.13
+LinearSolve        Ver. 3.12.0
+OrdinaryDiffEqCore Ver. 1.25.0
+
+System information:
+====================================
+OS       : macOS (arm64-apple-darwin24.0.0)
+CPU      : 8 × Apple M3
+Memory   : 16.0 GB
+WORD_SIZE: 64
+LIBM     : libopenlibm
+LLVM     : libLLVM-16.0.6 (ORCJIT, apple-m2)
+BLAS     : libopenblas64_.dylib (ilp64)
+Threads  : 4 (on 4 virtual cores)
+</code></pre>
+</div>
+</div>
+
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-gravina2024adaptive" class="csl-entry" role="listitem">
+Gravina, Luca, and Vincenzo Savona. 2024. <span>“<span class="nocase">Adaptive variational low-rank dynamics for open quantum systems</span>.”</span> <em>Phys. Rev. Res.</em> 6 (April): 023072. <a href="https://doi.org/10.1103/PhysRevResearch.6.023072">https://doi.org/10.1103/PhysRevResearch.6.023072</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/qutip\.org\/qutip-julia-tutorials\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Copyright © 2025 <a href="https://qutip.org/" target="_blank"><strong>QuTiP.org</strong></a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/qutip/qutip-julia-tutorials/edit/main/QuantumToolbox.jl/time_evolution/lowrank.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/qutip/qutip-julia-tutorials/blob/main/QuantumToolbox.jl/time_evolution/lowrank.qmd" class="toc-action"><i class="bi empty"></i>View source</a></li><li><a href="https://github.com/qutip/qutip-julia-tutorials/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
